@@ -1,0 +1,9 @@
+{
+  "name": "Health Smart Triage Semi Finals Version",
+  "description": "An intelligent patient routing system for Naga City that balances individual health needs with city-wide resource availability using IMCI/BEmONC triage and economic load balancing.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera",
+    "microphone"
+  ]
+}

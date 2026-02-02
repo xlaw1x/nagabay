@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health | Naga City Smart Triage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              naga: {
+                blue: '#0c4ca3',
+                purple: '#5d3494',
+                orange: '#f05123',
+                yellow: '#fbc02d',
+                text: '#34265e',
+                lightText: '#827ba3',
+                bg: '#f8f9fe',
+                pink: '#fce7f3'
+              },
+              dark: {
+                bg: '#0f172a',
+                card: '#1e293b',
+                text: '#f8fafc',
+                muted: '#94a3b8',
+                border: '#334155'
+              }
+            },
+            fontFamily: {
+              sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+            },
+            borderRadius: {
+              'mynaga': '1.5rem',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body { background-color: #f8f9fe; color: #34265e; transition: background-color 0.3s ease, color 0.3s ease; }
+        .dark body { background-color: #0f172a; color: #f8fafc; }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+        .bg-mynaga-gradient {
+          background: linear-gradient(180deg, #fcece8 0%, #f8f9fe 100%);
+        }
+        .dark .bg-mynaga-gradient {
+          background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);
+        }
+        .naga-shadow {
+          box-shadow: 0 10px 30px -10px rgba(52, 38, 94, 0.1);
+        }
+        .dark .naga-shadow {
+          box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+        .bottom-nav-shadow {
+          box-shadow: 0 -4px 20px -5px rgba(52, 38, 94, 0.08);
+        }
+        .dark .bottom-nav-shadow {
+          box-shadow: 0 -4px 20px -5px rgba(0, 0, 0, 0.3);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 10px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #334155;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "jspdf": "https://esm.sh/jspdf@2.5.1",
+    "xlsx": "https://esm.sh/xlsx@0.18.5"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="font-sans antialiased">
+    <div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
