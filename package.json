@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && echo 'Build complete. API routes in /api directory are automatically deployed by Vercel.'",
     "preview": "vite preview",
     "server": "node server/index.js"
   },
