@@ -1,67 +1,51 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { generateObject } from 'ai';
+import { google } from '@ai-sdk/google';
 
 /**
- * Lazy initialization of Gemini client
- * This prevents the app from crashing if API key is missing at startup
- */
-let geminiClient = null;
-let initializationError = null;
-
-/**
- * Validates that the GEMINI_API_KEY environment variable is set
+ * Validates that the GOOGLE_API_KEY environment variable is set
  * @returns {Object} Validation result with isValid flag and message
  */
 export function validateApiKey() {
-  if (!process.env.GEMINI_API_KEY) {
+  if (!process.env.GOOGLE_API_KEY) {
     return {
       isValid: false,
-      message: 'GEMINI_API_KEY is not configured in environment variables'
+      message: 'GOOGLE_API_KEY is not configured in environment variables'
     };
   }
   
-  if (process.env.GEMINI_API_KEY.trim().length === 0) {
+  if (process.env.GOOGLE_API_KEY.trim().length === 0) {
     return {
       isValid: false,
-      message: 'GEMINI_API_KEY is empty'
+      message: 'GOOGLE_API_KEY is empty'
     };
   }
 
   return {
     isValid: true,
-    message: 'GEMINI_API_KEY is properly configured'
+    message: 'GOOGLE_API_KEY is properly configured'
   };
 }
 
 /**
- * Initializes the Gemini client lazily on first use
- * @returns {Object} { client, error }
+ * Initializes the Google AI model with API key
+ * @returns {Object} { model, error }
  */
-function initializeClient() {
-  if (geminiClient) {
-    return { client: geminiClient, error: null };
-  }
-
-  if (initializationError) {
-    return { client: null, error: initializationError };
-  }
-
+function initializeModel() {
   try {
     const validation = validateApiKey();
     if (!validation.isValid) {
-      initializationError = new Error(validation.message);
-      throw initializationError;
+      throw new Error(validation.message);
     }
 
-    geminiClient = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY
+    const model = google('gemini-2.0-flash', {
+      apiKey: process.env.GOOGLE_API_KEY
     });
 
-    console.log('[GEMINI] Client initialized successfully');
-    return { client: geminiClient, error: null };
+    console.log('[GEMINI] Model initialized successfully');
+    return { model, error: null };
   } catch (error) {
-    initializationError = error;
     console.error('[GEMINI] Initialization error:', error.message);
-    return { client: null, error };
+    return { model: null, error };
   }
 }
 
@@ -203,14 +187,14 @@ You must return a valid JSON object with the exact schema specified. Do not devi
 `;
 
 /**
- * Calls the Gemini API with triage data
+ * Calls the Gemini API with triage data using AI SDK
  * @param {string} userInput - JSON string of patient intake data
  * @returns {Promise<Object>} Parsed triage result
  * @throws {GeminiError} With specific error type and status code
  */
 export async function getTriageAnalysis(userInput) {
-  // Initialize client
-  const { client, error } = initializeClient();
+  // Initialize model
+  const { model, error } = initializeModel();
   
   if (error) {
     const errorCategory = categorizeError(error);
@@ -224,70 +208,46 @@ export async function getTriageAnalysis(userInput) {
   try {
     console.log('[GEMINI] Sending triage request...');
     
-    const response = await client.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: userInput,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            triageLevel: {
-              type: Type.STRING,
-              enum: ['EMERGENCY', 'URGENT', 'ROUTINE'],
-              description: 'Severity level of the patient\'s condition'
-            },
-            urgencyScore: {
-              type: Type.NUMBER,
-              description: 'Numeric score from 1-10 indicating urgency'
-            },
-            explanation: {
-              type: Type.STRING,
-              description: 'Clinical reasoning for triage decision'
-            },
-            recommendedFacilityIds: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: 'List of recommended facility IDs for patient referral'
-            },
-            institutionalWin: {
-              type: Type.STRING,
-              description: 'Description of how this routing achieves institutional goals'
-            },
-            actionPlan: {
-              type: Type.STRING,
-              description: 'Step-by-step action plan for the patient'
-            },
-            bookingContact: {
-              type: Type.OBJECT,
-              properties: {
-                name: { type: Type.STRING },
-                phone: { type: Type.STRING },
-                scheduleNotes: { type: Type.STRING }
-              },
-              required: ['name', 'phone', 'scheduleNotes']
-            }
-          },
-          required: [
-            'triageLevel',
-            'urgencyScore',
-            'explanation',
-            'recommendedFacilityIds',
-            'institutionalWin',
-            'actionPlan',
-            'bookingContact'
-          ]
+    const triageSchema = {
+      type: 'object',
+      properties: {
+        triageLevel: {
+          type: 'string',
+          enum: ['LEVEL_1_EMERGENCY', 'LEVEL_2_TARGETED_CARE', 'LEVEL_3_ROUTINE']
+        },
+        recommendedFacility: {
+          type: 'string',
+          description: 'The facility ID to route the patient to'
+        },
+        facilityName: {
+          type: 'string'
+        },
+        reasoning: {
+          type: 'string',
+          description: 'Explanation for the triage decision'
+        },
+        actionPlan: {
+          type: 'string',
+          description: 'Recommended next steps for the patient'
+        },
+        warnings: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Any important warnings or notes'
         }
-      }
+      },
+      required: ['triageLevel', 'recommendedFacility', 'facilityName', 'reasoning', 'actionPlan']
+    };
+
+    const result = await generateObject({
+      model: model,
+      system: SYSTEM_INSTRUCTION,
+      prompt: userInput,
+      schema: triageSchema
     });
 
-    // Parse the response
-    const text = response.text.trim();
-    const triageResult = JSON.parse(text);
-
     console.log('[GEMINI] Response parsed successfully');
-    return triageResult;
+    return result.object;
 
   } catch (error) {
     console.error('[GEMINI] API Error:', error.message);
