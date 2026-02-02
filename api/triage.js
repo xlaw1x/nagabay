@@ -36,7 +36,7 @@ MAPPING (Barangay to Facility ID):
 
 If the patient's barangay does not have a specific BHS in the list above, route them to the nearest CHO, but explicitly state in the "actionPlan" that they should check their local health center first for future routine needs.
 
-You must return a valid JSON object.
+You must return a valid JSON object with the exact schema specified. Do not deviate from the schema.
 `;
 
 // Define the schema for the triage response
@@ -97,6 +97,16 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Validate API key is configured
+    if (!process.env.GOOGLE_API_KEY) {
+      console.error('[TRIAGE API] GOOGLE_API_KEY environment variable is not set');
+      return res.status(503).json({
+        success: false,
+        error: 'AI service not configured. Please set GOOGLE_API_KEY environment variable.',
+        errorType: 'MISSING_API_KEY'
+      });
+    }
+
     // Parse request body
     let bodyData = req.body;
     if (typeof bodyData === 'string') {
@@ -111,9 +121,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // Use Vercel AI Gateway with Google models
-    // The API key is automatically provided by Vercel AI Gateway
-    const model = google('gemini-2.0-flash');
+    // Use Google API with explicit API key
+    const model = google('gemini-2.0-flash', {
+      apiKey: process.env.GOOGLE_API_KEY
+    });
 
     // Call the AI model
     const result = await generateObject({
@@ -130,17 +141,18 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('[TRIAGE API] Error:', error.message);
+    console.error('[TRIAGE API] Full error:', error);
 
     // Determine error type
     let errorType = 'MODEL_ERROR';
     let message = 'AI service error. Try again.';
     let statusCode = 503;
 
-    if (error.message.includes('API key') || error.message.includes('authentication')) {
+    if (error.message.includes('API key') || error.message.includes('authentication') || error.message.includes('GOOGLE_API_KEY')) {
       errorType = 'MISSING_API_KEY';
       message = 'AI service not configured. Contact support.';
       statusCode = 503;
-    } else if (error.message.includes('quota') || error.message.includes('rate')) {
+    } else if (error.message.includes('quota') || error.message.includes('rate') || error.message.includes('429')) {
       errorType = 'QUOTA_EXCEEDED';
       message = 'Service overloaded. Try again in moments.';
       statusCode = 429;
