@@ -37,9 +37,7 @@ function initializeModel() {
       throw new Error(validation.message);
     }
 
-    const model = google('gemini-2.0-flash', {
-      apiKey: process.env.GOOGLE_API_KEY
-    });
+    const model = google('gemini-2.0-flash');
 
     console.log('[GEMINI] Model initialized successfully');
     return { model, error: null };

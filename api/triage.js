@@ -122,9 +122,8 @@ export default async function handler(req, res) {
     }
 
     // Use Google API with explicit API key (AI SDK v6 syntax)
-    const model = google.generative('gemini-2.0-flash', {
-      apiKey: process.env.GOOGLE_API_KEY
-    });
+    // gemini-2.0-flash is a v2 model - use simple google() call
+    const model = google('gemini-2.0-flash');
 
     // Call the AI model
     const result = await generateObject({
