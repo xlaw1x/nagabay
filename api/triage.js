@@ -121,8 +121,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // Use Google API with explicit API key
-    const model = google('gemini-2.0-flash', {
+    // Use Google API with explicit API key (AI SDK v6 syntax)
+    const model = google.generative('gemini-2.0-flash', {
       apiKey: process.env.GOOGLE_API_KEY
     });
 
